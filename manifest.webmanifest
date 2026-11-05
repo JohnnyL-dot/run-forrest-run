@@ -1,6 +1,6 @@
 {
-  "version": "v1.1.1",
-  "version_note": "1.1.1 – Versionsfältet följer js/version.js. 1.1.0 – Versionsfältet uppdaterat. 1.0.0 – Första leveransen (TRN-TEK-003, TRN-TEK-013).",
+  "version": "v1.2.0",
+  "version_note": "1.2.0 – Versionsfältet följer js/version.js. 1.1.1 – Versionsfältet följer js/version.js. 1.1.0 – Versionsfältet uppdaterat. 1.0.0 – Första leveransen (TRN-TEK-003, TRN-TEK-013).",
   "name": "RUN-FORREST-RUN",
   "short_name": "RUN-FORREST-RUN",
   "description": "Intervallträning: Tabata, HIIT, 4x4 och egna pass.",

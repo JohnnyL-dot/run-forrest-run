@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <!--
   RUN-FORREST-RUN – index.html
-  Filversion: 1.1.1
+  Filversion: 1.2.0
   Ändringsnotering:
+   1.2.0 – Figur under nedräkningen (#figureBox, #runMain), knappen Avbryt (#btnAbort) och figur i slutvyn (TRN-SIG-010 till 014, TRN-GEN-005).
    1.1.1 – Versionsfältet visas även i dialogerna (TRN-TEK-009).
    1.1.0 – Förklarande text vid inaktiva vilofält och meddelande om saknade röstfiler i inställningarna.
    1.0.0 – Första leveransen: skärmarna S1–S5, dialoger och informationsmeddelanden enligt skarmlista.md.
@@ -98,7 +99,10 @@
       <div id="phaseName" class="phase-name"><span id="phaseIcon" aria-hidden="true"></span><span id="phaseText"></span></div>
       <div id="runStatus" class="run-status"></div>
     </div>
-    <div id="countdownBox"><div id="countdown" aria-live="off">00:00</div></div>
+    <div id="runMain">
+      <div id="countdownBox"><div id="countdown" aria-live="off">00:00</div></div>
+      <div id="figureBox" aria-hidden="true"></div>
+    </div>
     <div id="runInfo">
       <div id="setRepInfo"></div>
       <div id="nextInfo"></div>
@@ -110,6 +114,7 @@
       <button id="btnSkip" class="btn-s3" type="button"></button>
       <button id="btnMinus" class="btn-s3" type="button" data-i18n="run.minus"></button>
       <button id="btnPlus" class="btn-s3" type="button" data-i18n="run.plus"></button>
+      <button id="btnAbort" class="btn-s3" type="button" data-i18n="run.abort"></button>
       <button id="btnMore" class="btn-s3" type="button" data-i18n="run.more"></button>
     </div>
     <div id="flash" aria-hidden="true"></div>
@@ -118,6 +123,7 @@
   <!-- S4 Slutvy -->
   <main id="s4" class="view" aria-labelledby="s4Title">
     <h1 id="s4Title" data-i18n="end.title"></h1>
+    <div id="endFigure" class="end-figure" aria-hidden="true"></div>
     <p id="endStatus" class="run-status"></p>
     <div class="actions">
       <button id="btnEndRestart" class="btn primary" type="button" data-i18n="end.restart"></button>

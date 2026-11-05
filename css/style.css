@@ -1,7 +1,9 @@
 /*
  * RUN-FORREST-RUN – style.css
- * Filversion: 1.1.1
+ * Filversion: 1.2.0
  * Ändringsnotering:
+ *  1.2.0 – Figuren och dess animeringar, ny layout i träningsvyn (nedräkning med fast höjd, figur under, två knapprader),
+ *          övergångsmarkering med färg och namn i stället för bild (TRN-SIG-007, SIG-010 till 014, GEN-005).
  *  1.1.1 – Versionsnumret (TRN-TEK-009) ritas nu som ett eget fält längst ned i högra hörnet (12 px, egen bakgrund,
  *          säkra områden) i stället för text ovanpå innehållet. Vyerna har extra marginal nedtill så att inget döljs.
  *  1.1.0 – Stil för inaktiva fält, förklarande text och meddelande i inställningar.
@@ -129,7 +131,7 @@ body[data-view="s3"] #version { color: var(--s3-fg); background: transparent; bo
 #s3.active {
   display: grid; height: 100vh; height: 100dvh; overflow: hidden;
   grid-template-rows: auto minmax(0, 1fr) auto auto;
-  gap: 6px; padding: 8px 10px calc(28px + env(safe-area-inset-bottom, 0px)); color: var(--s3-fg);
+  gap: 4px; padding: 8px 10px calc(28px + env(safe-area-inset-bottom, 0px)); color: var(--s3-fg);
 }
 #s3[data-phase="start"] { background: var(--c-start); }
 #s3[data-phase="work"] { background: var(--c-work); }
@@ -141,10 +143,16 @@ body[data-view="s3"] #version { color: var(--s3-fg); background: transparent; bo
 .run-status { font-weight: 700; font-size: 1rem; }
 #s3 .run-status { padding: 2px 10px; border: 2px solid var(--s3-fg); border-radius: 999px; }
 
+/* Nedräkningen (TRN-VIS-011) och figuren direkt under den (TRN-SIG-014). Nedräkningsrutan går ut till skärmkanten och har
+   fast höjd 51 % av viewporten, så att den alltid uppfyller 50 % av ytan. Figuren får resten och krymper först. */
+#runMain { display: grid; grid-template-rows: 51dvh minmax(0, 1fr); margin: 0 -10px; min-height: 0; }
 #countdownBox {
-  container-type: size; display: flex; align-items: center; justify-content: center;
-  min-height: 52dvh; overflow: hidden;
+  container-type: size; display: flex; align-items: center; justify-content: center; min-height: 0; overflow: hidden;
 }
+#figureBox { min-height: 0; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+.fig { height: 100%; width: auto; max-height: 160px; color: var(--s3-fg); overflow: visible; }
+.end-figure { height: 140px; margin: 8px 0 16px; display: flex; justify-content: center; }
+.end-figure .fig { color: var(--fg); }
 #countdown {
   font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
   font-size: min(31cqw, 62cqh); color: var(--s3-fg);
@@ -155,44 +163,99 @@ body[data-view="s3"] #version { color: var(--s3-fg); background: transparent; bo
 #countdown.pulse { animation: pulse 1s ease-in-out infinite; } /* 1 Hz, högst 2 Hz (TRN-SIG-005) */
 @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } } /* högst 10 % */
 
-#runInfo { display: grid; gap: 2px; font-weight: 600; font-size: 1rem; }
+#runInfo { display: flex; flex-wrap: wrap; column-gap: 14px; row-gap: 0; font-weight: 600; font-size: 1rem; line-height: 1.35; }
+#setRepInfo, #progress { flex: 1 0 100%; }
 #progress { height: 12px; border: 2px solid var(--s3-fg); border-radius: 999px; overflow: hidden; margin-top: 4px; }
 #progressBar { height: 100%; width: 0%; background: var(--s3-fg); }
 
-#runButtons { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
-#btnPause { grid-column: span 3; }
-#btnSkip { grid-column: span 3; }
-#btnMinus, #btnPlus { grid-column: span 2; }
-#btnMore { grid-column: span 2; }
+/* Knappar (TRN-UI-004): minst 48 × 48 px, 8 px mellanrum. Rad 1: Paus och Hoppa över. Rad 2: −10 s, +10 s, Avbryt, Mer. */
+#runButtons { display: grid; grid-template-columns: repeat(12, 1fr); gap: 8px; }
+#btnPause, #btnSkip { grid-column: span 6; }
+#btnMinus, #btnPlus, #btnAbort, #btnMore { grid-column: span 3; }
 .btn-s3 {
   min-height: 48px; min-width: 48px; padding: 4px 8px; font-size: 1rem; font-weight: 700;
   background: #ffffff; color: #111827; border: 2px solid #111827; border-radius: 12px; cursor: pointer;
 }
 .btn-s3:disabled { opacity: 0.55; }
 
+/* Markering av fasövergång (TRN-SIG-007): fasens färg, namn och ikon. Ingen figur. */
 #flash {
-  position: fixed; inset: 0; display: none; align-items: center; justify-content: center;
-  font-size: 30vmin; background: rgba(255,255,255,.55); pointer-events: none; z-index: 20;
+  position: fixed; inset: 0; display: none; align-items: center; justify-content: center; text-align: center;
+  font-size: 12vmin; font-weight: 800; color: var(--s3-fg); pointer-events: none; z-index: 20;
 }
+#flash[data-phase="start"] { background: var(--c-start); }
+#flash[data-phase="work"] { background: var(--c-work); }
+#flash[data-phase="rest"] { background: var(--c-rest); }
+#flash[data-phase="setrest"] { background: var(--c-setrest); }
 #flash.show { display: flex; }
-body:not(.no-anim) #flash.show { animation: flash 0.45s ease-out; }
-@keyframes flash { from { opacity: 1; } to { opacity: 0; } }
+body:not(.no-anim) #flash.show { animation: flash 0.45s ease-out; } /* en blixt per fasbyte, aldrig fler än tre per sekund */
+@keyframes flash { from { opacity: 0.9; } to { opacity: 0; } }
+
+/* Figuren (TRN-SIG-010 till 014). Egenritad SVG, ritas med linjer i texfärgen. Lederna är origo för sina grupper. */
+.fig line, .fig circle { stroke: currentColor; stroke-width: 5.5; stroke-linecap: round; }
+.fig circle { fill: currentColor; }
+.fig g { transform-box: view-box; }
+.f-lean { transform-origin: 50px 56px; }
+.f-thigh { transform-origin: 50px 56px; }
+.f-shin { transform-origin: 50px 72px; }
+.f-upper { transform-origin: 50px 32px; }
+.f-fore { transform-origin: 50px 46px; }
+
+/* Stillbilder (grundposer). Används också när animationer är avstängda. */
+[data-pose="run"] .f-lean { transform: rotate(10deg); }
+[data-pose="run"] .f-legF .f-thigh { transform: rotate(-38deg); }
+[data-pose="run"] .f-legF .f-shin { transform: rotate(20deg); }
+[data-pose="run"] .f-legB .f-thigh { transform: rotate(30deg); }
+[data-pose="run"] .f-legB .f-shin { transform: rotate(70deg); }
+[data-pose="run"] .f-armF .f-upper { transform: rotate(40deg); }
+[data-pose="run"] .f-armF .f-fore { transform: rotate(-60deg); }
+[data-pose="run"] .f-armB .f-upper { transform: rotate(-45deg); }
+[data-pose="run"] .f-armB .f-fore { transform: rotate(-70deg); }
+[data-pose="rest"] .f-legF .f-thigh { transform: rotate(3deg); }
+[data-pose="rest"] .f-legB .f-thigh { transform: rotate(-3deg); }
+[data-pose="rest"] .f-armF .f-upper { transform: rotate(8deg); }
+[data-pose="rest"] .f-armB .f-upper { transform: rotate(-8deg); }
+
+/* Löpande animering, 0,8 s per steg (högre takt än så blinkar inte; rörelsen är mjuk). */
+body:not(.no-anim) [data-pose="run"][data-state="play"] .f-all,
+body:not(.no-anim) [data-pose="run"][data-state="pause"] .f-all { animation: f-bob 0.4s ease-in-out infinite; }
+body:not(.no-anim) [data-pose="run"]:not([data-state="still"]) .f-thigh { animation: f-thigh 0.8s linear infinite; }
+body:not(.no-anim) [data-pose="run"]:not([data-state="still"]) .f-shin { animation: f-shin 0.8s linear infinite; }
+body:not(.no-anim) [data-pose="run"]:not([data-state="still"]) .f-upper { animation: f-swing 0.8s ease-in-out infinite; }
+body:not(.no-anim) [data-pose="run"]:not([data-state="still"]) .f-fore { animation: f-fore 0.8s ease-in-out infinite; }
+/* Motsatt fas för bakre benet och främre armen (efter genvägen ovan, annars nollställs fördröjningen) */
+body:not(.no-anim) [data-pose="run"] .f-legB .f-thigh, body:not(.no-anim) [data-pose="run"] .f-legB .f-shin,
+body:not(.no-anim) [data-pose="run"] .f-armF .f-upper, body:not(.no-anim) [data-pose="run"] .f-armF .f-fore { animation-delay: -0.4s !important; }
+@keyframes f-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+@keyframes f-thigh { 0%, 100% { transform: rotate(-38deg); } 50% { transform: rotate(32deg); } }
+@keyframes f-shin { 0%, 100% { transform: rotate(20deg); } 25% { transform: rotate(10deg); } 50% { transform: rotate(50deg); } 75% { transform: rotate(95deg); } }
+@keyframes f-swing { 0%, 100% { transform: rotate(-42deg); } 50% { transform: rotate(40deg); } }
+@keyframes f-fore { 0%, 100% { transform: rotate(-70deg); } 50% { transform: rotate(-50deg); } }
+
+/* Vilande animering: långsam andning, 4 s per andetag. Tydligt skild från den löpande. */
+body:not(.no-anim) [data-pose="rest"]:not([data-state="still"]) .f-lean { animation: f-breathe 4s ease-in-out infinite; }
+body:not(.no-anim) [data-pose="rest"]:not([data-state="still"]) .f-upper { animation: f-sway 4s ease-in-out infinite; }
+body:not(.no-anim) [data-pose="rest"]:not([data-state="still"]) .f-armB .f-upper { animation-name: f-swayB; }
+@keyframes f-breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.03, 1.025); } }
+@keyframes f-swayB { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(-11deg); } }
+@keyframes f-sway { 0%, 100% { transform: rotate(6deg); } 50% { transform: rotate(11deg); } }
+[data-state="pause"] *, body.app-hidden .fig * { animation-play-state: paused !important; }
+body.no-anim .fig * { animation: none !important; }
 
 body.no-anim #countdown.pulse { animation: none; }
 body.no-anim * { transition: none !important; }
 
-/* Liggande läge (640 × 360) */
+/* Liggande läge (640 × 360): nedräkningen med figuren under i vänster kolumn, övrigt i höger. */
 @media (orientation: landscape) and (max-height: 560px) {
   #s3.active {
-    grid-template-columns: 58% minmax(0, 1fr); grid-template-rows: auto auto auto 1fr;
-    column-gap: 10px; padding: 6px 10px calc(28px + env(safe-area-inset-bottom, 0px));
+    grid-template-columns: 67% minmax(0, 1fr); grid-template-rows: auto auto auto 1fr;
+    column-gap: 10px; row-gap: 4px; padding: 6px 10px calc(28px + env(safe-area-inset-bottom, 0px));
   }
-  #countdownBox { grid-column: 1; grid-row: 1 / span 4; min-height: 0; }
-  #runStatusRow { grid-column: 2; grid-row: 1; flex-wrap: wrap; min-height: 0; }
-  #runInfo { grid-column: 2; grid-row: 2; font-size: 0.95rem; }
-  #runButtons { grid-column: 2; grid-row: 3 / span 2; grid-template-columns: 1fr 1fr; align-content: start; }
-  #btnPause, #btnSkip, #btnMinus, #btnPlus, #btnMore { grid-column: span 1; }
-  #btnMore { grid-column: span 2; }
-  .phase-name { font-size: 1.15rem; }
+  #runMain { grid-column: 1; grid-row: 1 / span 4; grid-template-rows: 76dvh minmax(0, 1fr); margin: -6px 0 0 -10px; }
+  #runStatusRow { grid-column: 2; grid-row: 1; flex-wrap: wrap; min-height: 0; gap: 4px; }
+  #runInfo { grid-column: 2; grid-row: 2; font-size: 0.9rem; }
+  #runButtons { grid-column: 2; grid-row: 3 / span 2; grid-template-columns: 1fr 1fr; align-content: start; gap: 8px; }
+  #btnPause, #btnSkip, #btnMinus, #btnPlus, #btnAbort, #btnMore { grid-column: span 1; }
+  .phase-name { font-size: 1.1rem; }
 }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }

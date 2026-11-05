@@ -1,10 +1,56 @@
 # CHANGELOG – RUN-FORREST-RUN
 
-Filversion: 1.1.1
-Ändringsnotering: 1.1.1 – Rättning av visningen av versionsnumret. 1.1.0 – Anpassad till kravspecifikation v2.3. 1.0.0 – Första leveransen (TRN-TEK-013).
+Filversion: 1.2.0
+Ändringsnotering: 1.2.0 – Anpassad till kravspecifikation v2.4 (animerad figur, Avbryt direkt synlig). 1.1.1 – Rättning av visningen av versionsnumret. 1.1.0 – Anpassad till kravspecifikation v2.3. 1.0.0 – Första leveransen (TRN-TEK-013).
 
-Kravspecifikation: v2.3. Versionsnumret följer leveransen (TRN-TEK-005 till 008) och är exakt git-taggen (TRN-TEK-009).
+Kravspecifikation: v2.4. Versionsnumret följer leveransen (TRN-TEK-005 till 008) och är exakt git-taggen (TRN-TEK-009).
 Filer som saknar kommentarsyntax (ikoner, ljudfiler) versionsmärks i tabellen nedan.
+
+## v1.2.0 – anpassning till kravspecifikation v2.4
+
+Nya funktioner, alltså minorversion (TRN-TEK-007). Inga T-nummer är åtgärdade. Allt som delrapport 1 godkände (KON, PRE,
+beräkningar) är oförändrat: `js/config.js`, `js/timeline.js` och `js/storage.js` är inte rörda.
+
+Berörda krav:
+- TRN-SIG-010, 011, 012, 014: egenritad figur (inbäddad SVG i `js/figure.js`, ritad med linjer, inga externa resurser,
+  inga tredjepartskaraktärer) direkt under nedräkningen. Löpande animering vid arbetsfas (0,8 s per steg, i ögla), vilande
+  animering (långsam andning, 4 s) vid repetitionsvila, setvila och startfas. Paus stannar animeringen i sitt läge
+  (`animation-play-state`) och återupptagning fortsätter. Slutvyn (S4) visar den vilande figuren som stillbild.
+- TRN-SIG-013, INS-003: animeringarna följer reglaget Animationer (som standard operativsystemets minskade rörelse).
+  Avstängt ger stillbild i löpande respektive vilande pose. Animeringen står stilla när appen inte syns
+  (`visibilitychange`). CSS-animationer, så tidtagningen (Date.now) påverkas inte.
+- TRN-SIG-007: den korta helskärmsbilden med figurer (🏃 och 🧘) vid fasbyte är borttagen. Fasövergången markeras nu med fasens
+  färg, namn och en ikon utan figur (⏱ ⚡ 💤 🏁), en blixt på 0,45 s per fasbyte. Med avstängda animationer är blixten
+  statisk (ingen toning). Fasikonerna bredvid fasnamnet ritar heller inga figurer.
+- TRN-GEN-005: knappen Avbryt är direkt synlig i träningsvyn (öppnar D3) och är borttagen ur Mer-menyn, som nu innehåller
+  Hoppa över repetition, Hoppa över set och Starta om.
+- TRN-SIG-014, VIS-011, UI-004, UI-005 (layout): nedräkningsrutan går ut till skärmkanten och har fast höjd (51 % av
+  höjden stående, 76 % liggande med 67 % bredd), så att den alltid uppfyller 50 % av ytan. Figuren får resten och krymper först.
+  Knapparna står i två rader: Paus och Hoppa över, sedan −10 s, +10 s, Avbryt och Mer (fyra på en rad). Det avviker från
+  textskissen i skarmlista.md, som visar Avbryt och Mer på en egen tredje rad: tre rader ryms inte stående på 360 × 640
+  med nedräkningen på minst 50 %. Nästa fas och total återstående tid delar rad.
+- TRN-TEK-009: versionen visas som `v1.2.0` nere till vänster.
+
+Egen tekniska kontroll (headless Chromium, inte kravverifiering): nedräkningsrutans andel av viewporten 0,51 (360 × 640),
+0,505 (640 × 360), 0,51 (1280 × 800); ingen scrollning; knappar minst 48 × 48 px med 8 px mellanrum; versionsfältet täcker
+inga knappar; figurens höjd 66 px stående och 58 px liggande på 360 × 640 respektive 640 × 360. Paus stoppade animeringen och
+återupptagning fortsatte. Stillbild verifierad med animationer avstängda.
+
+Kända brister:
+- Figuren är liten på små skärmar (31 px på 320 × 568), eftersom nedräkningen går före (SIG-014). På 568 × 320 liggande
+  täcks bottenraden av versionsfältet något (utanför de angivna kontrollstorlekarna).
+- Figurens utseende är inte godkänt av användaren (Q-022).
+- Appar med v1.1.1 uppdateras efter nästa start med de nya filerna (TEK-012).
+
+| Fil | Version |
+|---|---|
+| js/figure.js | 1.2.0 (ny) |
+| index.html, css/style.css, js/app.js, js/version.js, sw.js | 1.2.0 |
+| manifest.webmanifest (versionsfält), README.md, CHANGELOG.md | 1.2.0 |
+| tools/sync-version.mjs | 1.1.1 (oförändrad) |
+| js/config.js, js/timeline.js, js/storage.js, js/i18n.js | 1.1.0 (oförändrade) |
+| js/audio.js | 1.0.0 (oförändrad) |
+| assets/icons/*.png, assets/voice/en/*.mp3, assets/voice/sv/README.md | 1.0.0 (oförändrade) |
 
 ## v1.1.1 – rättning: versionsnumret syntes inte (TRN-TEK-009)
 

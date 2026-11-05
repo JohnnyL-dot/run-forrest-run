@@ -1,7 +1,9 @@
 /*
  * RUN-FORREST-RUN – app.js
- * Filversion: 1.1.1
+ * Filversion: 1.2.0
  * Ändringsnotering:
+ *  1.2.0 – Animerad figur under nedräkningen (TRN-SIG-010 till 014), Avbryt direkt synlig i träningsvyn (TRN-GEN-005),
+ *          den korta bilden vid fasbyte ersatt av färg och namn utan figur (TRN-SIG-007), vilande figur i slutvyn.
  *  1.1.1 – Versionsnumret visas även i dialogerna. En ny version hämtas och aktiveras utan att användaren rensar data:
  *          uppdateringskontroll vid start och när appen blir synlig, aktivering när inget pass pågår, ingen
  *          osparad redigering och ingen dialog är öppen (TRN-TEK-009, TRN-TEK-012).
@@ -17,13 +19,15 @@ import {
   DEFAULT_CONFIG, PRESETS, FIELDS, cloneConfig, validateConfig, isFieldActive, normalizeConfig,
 } from './config.js';
 import { Engine, ADJUST_STEP_S } from './timeline.js';
+import { mountFigure, setFigure } from './figure.js';
 import { AudioEngine } from './audio.js';
 import * as store from './storage.js';
 import { t, setLanguage, detectLanguage, getLanguage, formatTime } from './i18n.js';
 
 const $ = (id) => document.getElementById(id);
 const FIELD_KEYS = Object.keys(FIELDS);
-const PHASE_ICON = { start: '⏱', work: '🏃', rest: '🧘', setrest: '🏁' };
+// Ikonerna visar inga figurer: den enda figuren i appen är den animerade (TRN-SIG-007, SIG-010 till 014).
+const PHASE_ICON = { start: '⏱', work: '⚡', rest: '💤', setrest: '🏁' };
 const RESTORE_LIMIT_MS = 10 * 60 * 1000; // TRN-LAG-006
 
 const audio = new AudioEngine();
@@ -387,7 +391,7 @@ function engineHooks() {
       if (!missed) {
         const voiceOk = audio.phaseChange(from, to);
         if (!voiceOk) infoOnce('info.voiceMissing');
-        flash(PHASE_ICON[to.type]);
+        flash(to.type);
       }
       persistSession(true);
     },
@@ -404,15 +408,24 @@ function attachEngine(engine) {
   renderRun(engine.view());
 }
 
+// Markering av fasövergång (TRN-SIG-007): fasens färg och namn, tillsammans med en ikon. Ingen figur visas här.
+// Med avstängda animationer är markeringen en statisk färgblixt utan toning (styrs i CSS).
 let flashTimer = null;
-function flash(icon) {
+function flash(type) {
   const el = $('flash');
-  el.textContent = icon;
+  el.dataset.phase = type;
+  el.textContent = `${PHASE_ICON[type]} ${t('phase.' + type)}`;
   el.classList.remove('show');
   void el.offsetWidth;
   el.classList.add('show');
   clearTimeout(flashTimer);
   flashTimer = setTimeout(() => el.classList.remove('show'), 450);
+}
+
+// Figuren under nedräkningen (TRN-SIG-010 till 014): löpande vid arbete, vilande i övriga faser och vid start.
+function renderFigure(v) {
+  const pose = v.phase.type === 'work' ? 'run' : 'rest';
+  setFigure($('figureBox'), pose, v.running ? 'play' : 'pause');
 }
 
 let lastRenderKey = '';
@@ -449,6 +462,7 @@ function renderRun(v) {
   $('btnPause').textContent = v.running ? t('run.pause') : t('run.resume');
   $('btnSkip').textContent = t('run.skip', { phase: t('phaseNoun.' + p.type) });
 
+  renderFigure(v);
   persistSession(false);
 }
 
@@ -494,6 +508,7 @@ function finishPass(missed) {
   finalizePassState(true);
   state.dirty = false; // konfigurationen är sparad
   $('endStatus').textContent = t('status.finished');
+  setFigure($('endFigure'), 'rest', 'still'); // vilande stillbild i slutvyn (TRN-SIG-012)
   show('s4');
 }
 
@@ -520,7 +535,6 @@ async function openMore() {
   if (e.canSkipSet()) buttons.push({ label: t('run.skipSet'), value: 'set' });
   buttons.push(
     { label: t('run.restart'), value: 'restart' },
-    { label: t('run.abort'), value: 'abort', danger: true },
     { label: t('run.close'), value: 'close', primary: true },
   );
   const r = await openModal({ title: t('run.menu'), buttons });
@@ -528,7 +542,6 @@ async function openMore() {
   if (r.value === 'rep') { state.engine.skipRep(); persistSession(true); }
   else if (r.value === 'set') { state.engine.skipSet(); persistSession(true); }
   else if (r.value === 'restart') restartPass();
-  else if (r.value === 'abort') abortPass();
 }
 
 /* ================= Återställning (D5) ================= */
@@ -665,10 +678,13 @@ function bindUi() {
   $('btnSkip').addEventListener('click', () => { if (state.engine) { state.engine.skipPhase(); persistSession(true); } });
   $('btnMinus').addEventListener('click', () => { if (state.engine) { state.engine.adjust(-ADJUST_STEP_S); persistSession(true); } });
   $('btnPlus').addEventListener('click', () => { if (state.engine) { state.engine.adjust(ADJUST_STEP_S); persistSession(true); } });
+  $('btnAbort').addEventListener('click', abortPass);
   $('btnMore').addEventListener('click', openMore);
 
   document.addEventListener('visibilitychange', () => {
     const e = state.engine;
+    // Animeringen stannar när appen inte syns (TRN-SIG-014)
+    document.body.classList.toggle('app-hidden', document.visibilityState === 'hidden');
     if (document.visibilityState === 'hidden') {
       state.hiddenAt = Date.now();
       persistSession(true);
@@ -734,6 +750,8 @@ function isIos() {
 /* ================= Start ================= */
 
 async function init() {
+  mountFigure($('figureBox'));
+  mountFigure($('endFigure'));
   applySettings();
   applyStaticText();
   bindUi();

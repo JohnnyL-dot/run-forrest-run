@@ -1,17 +1,18 @@
 /*
  * RUN-FORREST-RUN – sw.js (service worker)
- * Filversion: 1.1.1
+ * Filversion: 1.2.0
  * Ändringsnotering:
+ *  1.2.0 – Ny cache v1.2.0 och den nya filen js/figure.js ingår i förladdningen.
  *  1.1.1 – Cachenamnet följer VERSION i js/version.js (kontrolleras av tools/sync-version.mjs). Ny cache v1.1.1.
  *  1.1.0 – Ny cache v1.1.0 (appens filer ändrades). Cachenamnet ska alltid vara lika med VERSION i js/version.js.
  *  1.0.0 – Offlinelagring av appskalet efter första laddningen (TRN-NFK-004). Ny version aktiveras inte
  *          automatiskt: den väntar tills appen startas om eller inget pass pågår (TRN-TEK-012).
  * CACHE ska vara 'rfr-' + VERSION i js/version.js. Kör `node tools/sync-version.mjs` efter ändring av versionen.
  */
-const CACHE = 'rfr-v1.1.1';
+const CACHE = 'rfr-v1.2.0';
 const ASSETS = [
   './', './index.html', './manifest.webmanifest', './css/style.css',
-  './js/app.js', './js/audio.js', './js/config.js', './js/i18n.js', './js/storage.js', './js/timeline.js', './js/version.js',
+  './js/app.js', './js/audio.js', './js/config.js', './js/figure.js', './js/i18n.js', './js/storage.js', './js/timeline.js', './js/version.js',
   './assets/icons/icon-192.png', './assets/icons/icon-512.png', './assets/icons/icon-maskable-512.png', './assets/icons/apple-touch-icon.png',
   './assets/voice/sv/work.mp3', './assets/voice/sv/rest.mp3', './assets/voice/sv/setrest.mp3', './assets/voice/sv/done.mp3',
   './assets/voice/en/work.mp3', './assets/voice/en/rest.mp3', './assets/voice/en/setrest.mp3', './assets/voice/en/done.mp3',
