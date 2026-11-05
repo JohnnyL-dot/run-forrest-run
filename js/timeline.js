@@ -1,7 +1,9 @@
 /*
  * RUN-FORREST-RUN – timeline.js
- * Filversion: 1.0.0
+ * Filversion: 1.1.0
  * Ändringsnotering:
+ *  1.1.0 – +10 s ignoreras om fasens återstående tid skulle bli över 3600 s (TRN-GEN-011, Q-012).
+ *          Hoppa över set går alltid till setvilan (som är minst 5 s), sista setet avslutar passet (TRN-GEN-017).
  *  1.0.0 – Tidtagningsmotor baserad på faktisk förfluten tid (systemtid), inte på
  *          räknande timers (TRN-NFK-003, TRN-BAK-004). Paus, återupptagning, hoppa över
  *          fas/repetition/set, ±10 s, återställning och klockhopp (TRN-GEN-001–017,
@@ -229,7 +231,7 @@ export class Engine {
     this._jumpTo(to, wasRunning);
   }
 
-  /** TRN-GEN-017: till setvilan efter setet, annars nästa sets första arbetsfas. Sista setet avslutar passet. */
+  /** TRN-GEN-017: till setvilan efter setet. Sista setet avslutar passet. */
   canSkipSet() { return !this.finished && this._cur().type !== 'start'; }
   skipSet() {
     if (!this.canSkipSet()) return;
@@ -256,8 +258,8 @@ export class Engine {
     if (this.finished) return;
     const cur = this._cur();
     const remaining = cur.dur * 1000 - this.elapsedMs;
-    let newRemaining = remaining + deltaS * 1000;
-    if (newRemaining > MAX_REMAINING_S * 1000) newRemaining = MAX_REMAINING_S * 1000;
+    const newRemaining = remaining + deltaS * 1000;
+    if (newRemaining > MAX_REMAINING_S * 1000) return; // Knappen ignoreras, ingen ändring (TRN-GEN-011)
     if (newRemaining <= 0) {
       if (cur.type !== 'start') this.adjustMs -= Math.max(0, remaining);
       this._jumpTo(this.idx + 1, wasRunning);

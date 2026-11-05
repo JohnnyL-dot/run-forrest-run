@@ -1,14 +1,17 @@
 /*
  * RUN-FORREST-RUN – app.js
- * Filversion: 1.0.0
+ * Filversion: 1.1.0
  * Ändringsnotering:
+ *  1.1.0 – Anpassad till kravspecifikation v2.3: inaktiva vilofält (KON-003, 005), konfigurationen sparas bara när
+ *          passet slutförs (LAG-001), meddelande om saknade röstfiler i inställningarna (LJU-006), ingen
+ *          omladdning vid första installationen av service workern (TEK-012).
  *  1.0.0 – Första leveransen: gränssnitt och styrning för S1–S5 och dialogerna D1–D7 enligt
  *          skarmlista.md. Binder ihop config, timeline, audio, storage och i18n (TRN-TEK-011).
  */
 
 import { VERSION } from './version.js';
 import {
-  DEFAULT_CONFIG, PRESETS, FIELDS, cloneConfig, validateConfig, MAX_TOTAL_SECONDS,
+  DEFAULT_CONFIG, PRESETS, FIELDS, cloneConfig, validateConfig, isFieldActive, normalizeConfig,
 } from './config.js';
 import { Engine, ADJUST_STEP_S } from './timeline.js';
 import { AudioEngine } from './audio.js';
@@ -191,6 +194,12 @@ function fieldMessage(key, code) {
 
 function refreshConfigView() {
   const cfg = readFormToConfig();
+  // Vilofält som inte gäller är inaktiva och ingår inte i beräkning eller validering (TRN-KON-003, 005).
+  [['repRest', 'cfg.inactiveRep'], ['setRest', 'cfg.inactiveSet']].forEach(([k, msgKey]) => {
+    const active = isFieldActive(cfg, k);
+    $('f-' + k).disabled = !active;
+    $('hint-' + k).textContent = active ? '' : t(msgKey);
+  });
   const v = validateConfig(cfg);
   FIELD_KEYS.forEach((k) => {
     const msg = v.fieldErrors[k] ? fieldMessage(k, v.fieldErrors[k]) : '';
@@ -310,7 +319,7 @@ async function deletePass(p) {
 async function saveAsCustom() {
   const v = refreshConfigView();
   if (!v.ok) return;
-  const cfg = cloneConfig(state.cfg);
+  const cfg = normalizeConfig(state.cfg);
   const editing = state.passId ? store.loadPasses().find((p) => p.id === state.passId) : null;
   const validate = (input, errEl) => {
     if (!input.value.trim()) { errEl.textContent = t('d1.nameRequired'); input.focus(); return false; }
@@ -459,10 +468,10 @@ async function releaseWakeLock() {
   if (wl) { try { await wl.release(); } catch (e) { /* redan släppt */ } }
 }
 
-function finalizePassState() {
-  // Senast använda konfiguration sparas när passet avslutas (slutförs eller avbryts) (TRN-LAG-001).
+function finalizePassState(completed) {
+  // Senast använda konfiguration sparas bara när passet slutförs. Ett avbrutet pass ändrar den inte (TRN-LAG-001, Q-010).
   if (state.runCfg) {
-    if (!store.saveLastConfig(state.runCfg)) showInfo('info.storageFail');
+    if (completed && !store.saveLastConfig(state.runCfg)) showInfo('info.storageFail');
     state.cfg = cloneConfig(state.runCfg);
   }
   store.clearSession();
@@ -476,7 +485,7 @@ function finishPass(missed) {
     if (!ok) infoOnce('info.voiceMissing');
   }
   if (e) e.destroy();
-  finalizePassState();
+  finalizePassState(true);
   $('endStatus').textContent = t('status.finished');
   show('s4');
 }
@@ -485,7 +494,7 @@ async function abortPass() {
   if (!(await confirmModal('d3'))) return;
   if (state.engine) state.engine.destroy();
   state.engine = null;
-  finalizePassState();
+  finalizePassState(false);
   writeFormFromConfig();
   goToConfig();
 }
@@ -563,7 +572,7 @@ async function offerRestore() {
     // Avsluta (eller avbryt dialogen när pausat pass finns kvar: passet förblir pausat)
     if (r.value === 'end' || !canResume) {
       if (state.engine) { state.engine.destroy(); state.engine = null; }
-      finalizePassState();
+      finalizePassState(false);
       loadConfigIntoForm(store.loadLastConfig() || DEFAULT_CONFIG);
       goToConfig();
     }
@@ -572,6 +581,27 @@ async function offerRestore() {
 }
 
 /* ================= S5 Inställningar ================= */
+
+const voiceFileCache = {};
+/** Kontrollerar om röstfilerna för ett språk finns (TRN-LJU-006). */
+async function voiceFilesExist(lang) {
+  if (lang in voiceFileCache) return voiceFileCache[lang];
+  let ok = false;
+  try {
+    const res = await fetch(`./assets/voice/${lang}/work.mp3`);
+    ok = res.ok;
+  } catch (e) { ok = false; }
+  voiceFileCache[lang] = ok;
+  return ok;
+}
+
+async function updateVoiceNote() {
+  const lang = effectiveVoiceLang();
+  const missing = !(await voiceFilesExist(lang));
+  const note = $('voiceNote');
+  note.textContent = t('info.voiceMissing');
+  note.hidden = !missing;
+}
 
 function renderSettings() {
   const s = state.settings;
@@ -586,13 +616,14 @@ function renderSettings() {
   $('s-animations').checked = animationsOn();
   $('s-theme').value = s.theme || 'system';
   $('s-language').value = effectiveLanguage();
+  updateVoiceNote();
 }
 
 function bindSettings() {
   const upd = (patch) => { Object.assign(state.settings, patch); applySettings(); persistSettings(); };
   $('s-sound').addEventListener('change', (e) => upd({ sound: e.target.checked }));
   $('s-voice').addEventListener('change', (e) => upd({ voice: e.target.checked }));
-  $('s-voiceLang').addEventListener('change', (e) => upd({ voiceLang: e.target.value }));
+  $('s-voiceLang').addEventListener('change', (e) => { upd({ voiceLang: e.target.value }); updateVoiceNote(); });
   $('s-volume').addEventListener('input', (e) => upd({ volume: Number(e.target.value) }));
   $('s-vibration').addEventListener('change', (e) => upd({ vibration: e.target.checked }));
   $('s-animations').addEventListener('change', (e) => upd({ animations: e.target.checked }));
@@ -609,7 +640,7 @@ function bindSettings() {
 function bindUi() {
   $('cfgForm').addEventListener('input', refreshConfigView);
   $('cfgForm').addEventListener('submit', (e) => e.preventDefault());
-  $('btnStart').addEventListener('click', () => { if (refreshConfigView().ok) startPass(state.cfg); });
+  $('btnStart').addEventListener('click', () => { if (refreshConfigView().ok) startPass(normalizeConfig(state.cfg)); });
   $('btnChoose').addEventListener('click', () => { renderList(); show('s2'); });
   $('btnSave').addEventListener('click', saveAsCustom);
   $('btnSettings').addEventListener('click', () => { renderSettings(); show('s5'); });
@@ -660,10 +691,11 @@ function applyPendingUpdate() {
 async function registerSw() {
   if (!('serviceWorker' in navigator)) return;
   try {
+    const hadController = !!navigator.serviceWorker.controller; // ingen omladdning vid allra första installationen
     swReg = await navigator.serviceWorker.register('./sw.js');
     let reloading = false;
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (reloading || state.engine) return;
+      if (!hadController || reloading || state.engine) return;
       reloading = true;
       location.reload();
     });

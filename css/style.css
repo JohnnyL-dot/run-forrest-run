@@ -1,7 +1,8 @@
 /*
  * RUN-FORREST-RUN – style.css
- * Filversion: 1.0.0
+ * Filversion: 1.1.0
  * Ändringsnotering:
+ *  1.1.0 – Stil för inaktiva fält, förklarande text och meddelande i inställningar.
  *  1.0.0 – Första leveransen: tema (ljust/mörkt/system), fasfärger, responsiv träningsvy (360×640 och
  *          640×360), mål på minst 48×48 px med minst 8 px mellanrum (TRN-UI-004), kontrast enligt WCAG 2.2 AA.
  */
@@ -52,6 +53,10 @@ input:focus-visible, select:focus-visible, button:focus-visible {
   outline: 3px solid var(--accent); outline-offset: 2px;
 }
 .field.invalid input { border-color: var(--err); }
+.hint { color: var(--muted); font-size: 0.92rem; margin-top: 4px; }
+.hint:empty { display: none; }
+input:disabled { opacity: 0.6; background: var(--card); }
+#voiceNote:not([hidden]) { display: block; margin: -6px 0 12px; }
 .err { color: var(--err); font-size: 0.95rem; min-height: 0; margin-top: 4px; }
 .err:empty { display: none; }
 

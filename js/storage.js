@@ -1,14 +1,16 @@
 /*
  * RUN-FORREST-RUN – storage.js
- * Filversion: 1.0.0
+ * Filversion: 1.1.0
  * Ändringsnotering:
+ *  1.1.0 – Datastruktur schema 2. Migrering från schema 1 (v1.0.0): vilovärden under 5 s höjs till 5 s så att sparade
+ *          pass och senast använd konfiguration finns kvar (TRN-TEK-010, Q-015). Pågående passtillstånd från schema 1 förkastas.
  *  1.0.0 – Lokal lagring i localStorage: inställningar, senast använd konfiguration, egna pass och
  *          pågående passtillstånd (TRN-INS-004, TRN-LAG-001/002/004/005). Lagrad data är
  *          versionsmärkt och migreras vid ändrad struktur (TRN-TEK-010). Ingen historik lagras (TRN-LAG-007).
  */
 
 import { DATA_SCHEMA } from './version.js';
-import { isUsableConfig, cloneConfig } from './config.js';
+import { isUsableConfig, cloneConfig, normalizeConfig } from './config.js';
 
 const K = {
   settings: 'rfr.settings',
@@ -46,6 +48,22 @@ function removeRaw(key) {
   try { localStorage.removeItem(key); } catch (e) { failed = true; }
 }
 
+/** Migrering schema 1 -> 2: vila under 5 s (inklusive 0) blir 5 s. Övriga fält är oförändrade. */
+function migrateConfigV1(c) {
+  if (!c || typeof c !== 'object') return c;
+  const out = { ...c };
+  for (const key of ['repRest', 'setRest']) {
+    if (typeof out[key] === 'number' && out[key] < 5) out[key] = 5;
+  }
+  return out;
+}
+const MIGRATE = {
+  settings: { 1: (d) => d },
+  config: { 1: migrateConfigV1 },
+  passes: { 1: (d) => (Array.isArray(d) ? d.map(migrateConfigV1) : d) },
+  session: { 1: () => null }, // ett pass från en äldre version återställs inte
+};
+
 /** Packar in data med schemaversion. */
 function wrap(data) { return { schema: DATA_SCHEMA, data }; }
 
@@ -63,7 +81,7 @@ function unwrap(key, migrators = {}) {
 }
 
 export function loadSettings() {
-  const d = unwrap(K.settings);
+  const d = unwrap(K.settings, MIGRATE.settings);
   const s = { ...DEFAULT_SETTINGS };
   if (d && typeof d === 'object') {
     for (const k of Object.keys(DEFAULT_SETTINGS)) if (k in d) s[k] = d[k];
@@ -73,16 +91,16 @@ export function loadSettings() {
 export function saveSettings(s) { return writeRaw(K.settings, wrap(s)); }
 
 export function loadLastConfig() {
-  const d = unwrap(K.lastConfig);
-  return isUsableConfig(d) ? cloneConfig(d) : null;
+  const d = unwrap(K.lastConfig, MIGRATE.config);
+  return isUsableConfig(d) ? normalizeConfig(d) : null;
 }
-export function saveLastConfig(cfg) { return writeRaw(K.lastConfig, wrap(cloneConfig(cfg))); }
+export function saveLastConfig(cfg) { return writeRaw(K.lastConfig, wrap(normalizeConfig(cfg))); }
 
 export function loadPasses() {
-  const d = unwrap(K.passes);
+  const d = unwrap(K.passes, MIGRATE.passes);
   if (!Array.isArray(d)) return [];
   return d.filter(p => p && typeof p.id === 'string' && typeof p.name === 'string' && isUsableConfig(p))
-          .map(p => ({ id: p.id, ...cloneConfig(p) }));
+          .map(p => ({ id: p.id, ...normalizeConfig(p) }));
 }
 function writePasses(list) { return writeRaw(K.passes, wrap(list)); }
 
@@ -94,7 +112,7 @@ function newId() {
 export function addPass(cfg) {
   const list = loadPasses();
   if (list.length >= MAX_CUSTOM_PASSES) return { ok: false, reason: 'limit' };
-  const pass = { id: newId(), ...cloneConfig(cfg) };
+  const pass = { id: newId(), ...normalizeConfig(cfg) };
   list.push(pass);
   return writePasses(list) ? { ok: true, pass } : { ok: false, reason: 'storage' };
 }
@@ -103,7 +121,7 @@ export function updatePass(id, cfg) {
   const list = loadPasses();
   const i = list.findIndex(p => p.id === id);
   if (i < 0) return addPass(cfg);
-  list[i] = { id, ...cloneConfig(cfg) };
+  list[i] = { id, ...normalizeConfig(cfg) };
   return writePasses(list) ? { ok: true, pass: list[i] } : { ok: false, reason: 'storage' };
 }
 
@@ -113,5 +131,5 @@ export function deletePass(id) {
 
 /* Pågående pass (TRN-LAG-005). Ögonblicksbilden sparas varje sekund och vid tillståndsändring. */
 export function saveSession(snapshot, extra) { return writeRaw(K.session, wrap({ snapshot, ...extra })); }
-export function loadSession() { return unwrap(K.session); }
+export function loadSession() { return unwrap(K.session, MIGRATE.session); }
 export function clearSession() { removeRaw(K.session); }

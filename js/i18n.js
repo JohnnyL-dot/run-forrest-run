@@ -1,7 +1,8 @@
 /*
  * RUN-FORREST-RUN – i18n.js
- * Filversion: 1.0.0
+ * Filversion: 1.1.0
  * Ändringsnotering:
+ *  1.1.0 – Texter för inaktiva vilofält (TRN-KON-003, 005) och röstfilsmeddelande i inställningar (TRN-LJU-006).
  *  1.0.0 – Svenska och engelska (TRN-INS-006). Språket följer enhetens språk med engelska som reserv.
  */
 
@@ -38,6 +39,8 @@ const SV = {
   'cfg.choose': 'Välj pass',
   'cfg.save': 'Spara som eget pass',
   'cfg.settings': 'Inställningar',
+  'cfg.inactiveRep': 'Gäller bara när antal repetitioner är fler än 1.',
+  'cfg.inactiveSet': 'Gäller bara när antal set är fler än 1.',
   'err.integer': 'Ange ett heltal.',
   'err.range.count': 'Värdet måste vara mellan {min} och {max}.',
   'err.range.sec': 'Värdet måste vara mellan {min} och {max} sekunder.',
@@ -164,6 +167,8 @@ const EN = {
   'cfg.choose': 'Choose workout',
   'cfg.save': 'Save as my workout',
   'cfg.settings': 'Settings',
+  'cfg.inactiveRep': 'Applies only when the number of repetitions is more than 1.',
+  'cfg.inactiveSet': 'Applies only when the number of sets is more than 1.',
   'err.integer': 'Enter a whole number.',
   'err.range.count': 'The value must be between {min} and {max}.',
   'err.range.sec': 'The value must be between {min} and {max} seconds.',
