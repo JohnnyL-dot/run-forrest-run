@@ -19,12 +19,12 @@ sidans innehåll i alla scrollbara vyer (S1, S2, S5), och i dialogerna fanns ing
 reproducera exakt hur det såg ut på användarens enhet. Kontrollerat i headless Chromium är det den enda orsaken som hittades.
 
 **Åtgärder.**
-- Versionsnumret är nu ett eget fält längst ned i högra hörnet: fast fält med full bredd, 12 px text högerjusterad,
+- Versionsnumret är nu ett eget fält längst ned i vänstra hörnet (Q-019, ändrat från höger): fast fält med full bredd, 14 px text vänsterjusterad,
   egen bakgrund (läsbar kontrast 7,6:1 i ljust och 12:1 i mörkt tema), tunn avgränsning mot innehållet och hänsyn till
-  `env(safe-area-inset-bottom)` och `env(safe-area-inset-right)`. Vyerna har extra marginal nedtill så att inget döljs.
-  I träningsvyn (S3) är fältet genomskinligt, har fasens textfärg och ligger i den marginal som redan fanns (20 px), så
+  `env(safe-area-inset-bottom)` och `env(safe-area-inset-left)`. Vyerna har extra marginal nedtill så att inget döljs.
+  I träningsvyn (S3) är fältet genomskinligt, har fasens textfärg och ligger i den marginal nedtill (28 px), så
   nedräkningen tar fortfarande minst 50 % av ytan (TRN-VIS-011).
-- Versionsnumret visas även i alla dialoger (nederst till höger i dialogrutan).
+- Versionsnumret visas även i alla dialoger (nederst till vänster i dialogrutan, 14 px).
 - Uppdateringsflödet: appen söker efter en ny version vid start och när den blir synlig igen, och aktiverar den
   när inget pass pågår, inga osparade ändringar finns i formuläret och ingen dialog är öppen. Annars väntar den till
   nästa start (TRN-TEK-012). `updateViaCache: 'none'` används vid registreringen. Användaren behöver inte rensa data.
