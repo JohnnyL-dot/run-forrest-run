@@ -35,9 +35,12 @@ Berörda testrapportpunkter: inga (första leveransen).
 
 - TRN-LJU-001: ljudsignal vid start är inte implementerad (AVVAKTAS).
 - TRN-LJU-006, TRN-LJU-008: svenska röstfiler saknas. Engelska röstfiler finns. Med svenskt röstspråk
-  visas ett meddelande och inget röstljud spelas. Se Q-012 i oppna-fragor.md.
+  visas ett meddelande och inget röstljud spelas. Se Q-014 i oppna-fragor.md.
 - Övergång mellan två arbetsfaser utan vila emellan (vila 0) ger ingen ljudsignal, eftersom en fas på
-  0 sekunder inte ger signal (TRN-KON-012). Se Q-013.
+  0 sekunder inte ger signal (TRN-KON-012). Se Q-015.
+- Tolkningar som är implementerade i väntan på beslut: +10 s begränsas till 3600 s återstående tid (Q-012),
+  omstart börjar med startfasen (Q-013), "Återuppta" i återställningsdialogen återupptar direkt (Q-016),
+  röstinstruktionen talas även vid första arbetsfasen (Q-017).
 - Inget av kraven är verifierat på riktiga enheter. Vibration, wake lock, bakgrundsljud och installation
   som hemskärmsapp återstår för testsessionen och manuell testning (TRN-TST-007, 009, 014).
 - Appen har bara körts tekniskt i en headless Chromium. Ingen kravverifiering är gjord.
