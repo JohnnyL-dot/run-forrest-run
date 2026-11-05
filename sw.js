@@ -1,13 +1,14 @@
 /*
  * RUN-FORREST-RUN – sw.js (service worker)
- * Filversion: 1.1.0
+ * Filversion: 1.1.1
  * Ändringsnotering:
+ *  1.1.1 – Cachenamnet följer VERSION i js/version.js (kontrolleras av tools/sync-version.mjs). Ny cache v1.1.1.
  *  1.1.0 – Ny cache v1.1.0 (appens filer ändrades). Cachenamnet ska alltid vara lika med VERSION i js/version.js.
  *  1.0.0 – Offlinelagring av appskalet efter första laddningen (TRN-NFK-004). Ny version aktiveras inte
  *          automatiskt: den väntar tills appen startas om eller inget pass pågår (TRN-TEK-012).
- * Håll CACHE i takt med appens version (js/version.js).
+ * CACHE ska vara 'rfr-' + VERSION i js/version.js. Kör `node tools/sync-version.mjs` efter ändring av versionen.
  */
-const CACHE = 'rfr-v1.1.0';
+const CACHE = 'rfr-v1.1.1';
 const ASSETS = [
   './', './index.html', './manifest.webmanifest', './css/style.css',
   './js/app.js', './js/audio.js', './js/config.js', './js/i18n.js', './js/storage.js', './js/timeline.js', './js/version.js',

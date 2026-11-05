@@ -1,10 +1,64 @@
 # CHANGELOG – RUN-FORREST-RUN
 
-Filversion: 1.1.0
-Ändringsnotering: 1.1.0 – Anpassad till kravspecifikation v2.3. 1.0.0 – Första leveransen (TRN-TEK-013).
+Filversion: 1.1.1
+Ändringsnotering: 1.1.1 – Rättning av visningen av versionsnumret. 1.1.0 – Anpassad till kravspecifikation v2.3. 1.0.0 – Första leveransen (TRN-TEK-013).
 
 Kravspecifikation: v2.3. Versionsnumret följer leveransen (TRN-TEK-005 till 008) och är exakt git-taggen (TRN-TEK-009).
 Filer som saknar kommentarsyntax (ikoner, ljudfiler) versionsmärks i tabellen nedan.
+
+## v1.1.1 – rättning: versionsnumret syntes inte (TRN-TEK-009)
+
+Buggrättning (TRN-TEK-008). Berörda krav: TRN-TEK-009 (och TRN-TEK-012 för uppdateringsflödet). Inga T-nummer i
+`felrapporter.md` (felet rapporterades av användaren och i testarens delrapport 1).
+
+**Orsak.** I v1.1.0 (och v1.0.0) ritades versionsnumret som 11 px text med `position: fixed` två pixlar från
+nederkanten, utan egen bakgrund och utan reserverad plats. På S1, som är scrollbar (1 035 px hög vid 360×640), hamnade
+texten ovanpå innehållet, mitt över kanten på det sista inmatningsfältet (Startfördröjning), så den var i praktiken
+oläslig. Elementet fanns i DOM med rätt text, vilket stämmer med testarens iakttagelse. Texten låg dessutom på
+sidans innehåll i alla scrollbara vyer (S1, S2, S5), och i dialogerna fanns inget versionsnummer. Vi har inte kunnat
+reproducera exakt hur det såg ut på användarens enhet. Kontrollerat i headless Chromium är det den enda orsaken som hittades.
+
+**Åtgärder.**
+- Versionsnumret är nu ett eget fält längst ned i högra hörnet: fast fält med full bredd, 12 px text högerjusterad,
+  egen bakgrund (läsbar kontrast 7,6:1 i ljust och 12:1 i mörkt tema), tunn avgränsning mot innehållet och hänsyn till
+  `env(safe-area-inset-bottom)` och `env(safe-area-inset-right)`. Vyerna har extra marginal nedtill så att inget döljs.
+  I träningsvyn (S3) är fältet genomskinligt, har fasens textfärg och ligger i den marginal som redan fanns (20 px), så
+  nedräkningen tar fortfarande minst 50 % av ytan (TRN-VIS-011).
+- Versionsnumret visas även i alla dialoger (nederst till höger i dialogrutan).
+- Uppdateringsflödet: appen söker efter en ny version vid start och när den blir synlig igen, och aktiverar den
+  när inget pass pågår, inga osparade ändringar finns i formuläret och ingen dialog är öppen. Annars väntar den till
+  nästa start (TRN-TEK-012). `updateViaCache: 'none'` används vid registreringen. Användaren behöver inte rensa data.
+  Observera att installationer som kör v1.1.0 eller äldre behöver starta om appen två gånger efter publiceringen för att
+  få v1.1.1, eftersom de gamla filerna styr uppdateringsflödet. Därefter gäller det nya flödet.
+- Enda versionskälla: `js/version.js` styr det visade värdet. Nytt hjälpverktyg `tools/sync-version.mjs` skriver samma
+  värde till cachenamnet i `sw.js` och till `manifest.webmanifest` (eller kontrollerar dem med `--check`).
+
+### Filer och version
+
+| Fil | Version |
+|---|---|
+| index.html | 1.1.1 |
+| css/style.css | 1.1.1 |
+| js/version.js | 1.1.1 |
+| js/app.js | 1.1.1 |
+| sw.js | 1.1.1 |
+| manifest.webmanifest (versionsfält) | 1.1.1 |
+| tools/sync-version.mjs | 1.1.1 (nytt, ingår inte i appen) |
+| README.md | 1.1.1 |
+| CHANGELOG.md | 1.1.1 |
+| js/config.js, js/timeline.js, js/storage.js, js/i18n.js | 1.1.0 (oförändrade) |
+| js/audio.js | 1.0.0 (oförändrad) |
+| assets/icons/*.png | 1.0.0 (oförändrade) |
+| assets/voice/en/*.mp3 | 1.0.0 (oförändrade) |
+| assets/voice/sv/README.md | 1.0.0 (oförändrad) |
+
+### Kända brister och sådant som medvetet inte är gjort
+
+- TRN-LJU-001: ljudsignal vid start är inte implementerad (AVVAKTAS).
+- TRN-LJU-006, 008: svenska röstfiler saknas. Beteendet är det tillfälliga som kravet anger.
+- Utvecklaren har kontrollerat versionsfältet och uppdateringsflödet i headless Chromium (360×640, 640×360, 1280×800, ljust
+  och mörkt tema). Riktiga mobilwebbläsare (Safari och Chrome på iPhone, Chrome och Samsung Internet på Android,
+  webbläsarens nedre fält, hemindikator) är inte prövade. Ingen kravverifiering är gjord.
 
 ## v1.1.0 – anpassning till kravspecifikation v2.3
 

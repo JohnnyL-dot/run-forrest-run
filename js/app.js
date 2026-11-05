@@ -1,7 +1,10 @@
 /*
  * RUN-FORREST-RUN – app.js
- * Filversion: 1.1.0
+ * Filversion: 1.1.1
  * Ändringsnotering:
+ *  1.1.1 – Versionsnumret visas även i dialogerna. En ny version hämtas och aktiveras utan att användaren rensar data:
+ *          uppdateringskontroll vid start och när appen blir synlig, aktivering när inget pass pågår, ingen
+ *          osparad redigering och ingen dialog är öppen (TRN-TEK-009, TRN-TEK-012).
  *  1.1.0 – Anpassad till kravspecifikation v2.3: inaktiva vilofält (KON-003, 005), konfigurationen sparas bara när
  *          passet slutförs (LAG-001), meddelande om saknade röstfiler i inställningarna (LJU-006), ingen
  *          omladdning vid första installationen av service workern (TEK-012).
@@ -36,6 +39,7 @@ const state = {
   hiddenAt: 0,
   passFlags: {},         // meddelanden som visas högst en gång per pass
   lastView: null,
+  dirty: false,          // användaren har ändrat i formuläret sedan start (osparad redigering)
 };
 
 /* ================= Inställningar ================= */
@@ -71,6 +75,7 @@ function persistSettings() {
 function applyStaticText() {
   document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
   $('version').textContent = VERSION;
+  $('mVersion').textContent = VERSION;
   $('s3').setAttribute('aria-label', t('cfg.title'));
 }
 
@@ -229,6 +234,7 @@ function refreshConfigView() {
 }
 
 function loadConfigIntoForm(cfg, passId = null) {
+  state.dirty = false;
   state.cfg = cloneConfig(cfg);
   state.passId = passId;
   writeFormFromConfig();
@@ -486,6 +492,7 @@ function finishPass(missed) {
   }
   if (e) e.destroy();
   finalizePassState(true);
+  state.dirty = false; // konfigurationen är sparad
   $('endStatus').textContent = t('status.finished');
   show('s4');
 }
@@ -638,7 +645,7 @@ function bindSettings() {
 /* ================= Bindningar ================= */
 
 function bindUi() {
-  $('cfgForm').addEventListener('input', refreshConfigView);
+  $('cfgForm').addEventListener('input', () => { state.dirty = true; refreshConfigView(); });
   $('cfgForm').addEventListener('submit', (e) => e.preventDefault());
   $('btnStart').addEventListener('click', () => { if (refreshConfigView().ok) startPass(normalizeConfig(state.cfg)); });
   $('btnChoose').addEventListener('click', () => { renderList(); show('s2'); });
@@ -671,6 +678,8 @@ function bindUi() {
         e.noteVisibilityReturn();
         acquireWakeLock();
         if (e.running && away > 2000) showInfo('info.advanced', { auto: 6000 });
+      } else {
+        checkForUpdate();
       }
     }
   });
@@ -681,25 +690,40 @@ function bindUi() {
 /* ================= Service worker (TRN-TEK-012) ================= */
 
 let swReg = null;
+
+/**
+ * Aktiverar en ny version som väntar, men bara när det är tillåtet (TRN-TEK-012): inget pass pågår, ingen osparad
+ * redigering och ingen dialog är öppen. Annars får den vänta tills appen startas om eller passet har avslutats.
+ */
 function applyPendingUpdate() {
-  // En ny version aktiveras först när inget pass pågår (TRN-TEK-012).
-  if (swReg && swReg.waiting && !state.engine) {
-    swReg.waiting.postMessage({ type: 'SKIP_WAITING' });
-  }
+  if (!swReg || !swReg.waiting) return;
+  if (state.engine || state.dirty || $('modal').open) return;
+  swReg.waiting.postMessage({ type: 'SKIP_WAITING' });
+}
+
+async function checkForUpdate() {
+  if (!swReg) return;
+  try { await swReg.update(); } catch (e) { /* offline: ingen kontroll */ }
+  applyPendingUpdate();
 }
 
 async function registerSw() {
   if (!('serviceWorker' in navigator)) return;
   try {
     const hadController = !!navigator.serviceWorker.controller; // ingen omladdning vid allra första installationen
-    swReg = await navigator.serviceWorker.register('./sw.js');
+    swReg = await navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' });
     let reloading = false;
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-      if (!hadController || reloading || state.engine) return;
+      if (!hadController || reloading || state.engine || state.dirty || $('modal').open) return;
       reloading = true;
       location.reload();
     });
+    swReg.addEventListener('updatefound', () => {
+      const w = swReg.installing;
+      if (w) w.addEventListener('statechange', () => { if (w.state === 'installed') applyPendingUpdate(); });
+    });
     applyPendingUpdate();
+    checkForUpdate();
   } catch (e) { /* appen fungerar utan service worker, men inte offline */ }
 }
 
