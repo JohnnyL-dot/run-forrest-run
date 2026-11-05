@@ -1,1 +1,153 @@
-RUN-FOOREST-RUN
+<!DOCTYPE html>
+<!--
+  RUN-FORREST-RUN – index.html
+  Filversion: 1.0.0
+  Ändringsnotering:
+   1.0.0 – Första leveransen: skärmarna S1–S5, dialoger och informationsmeddelanden enligt skarmlista.md.
+-->
+<html lang="sv" data-theme="system">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#166534">
+  <meta name="color-scheme" content="light dark">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="RUN-FORREST-RUN">
+  <title>RUN-FORREST-RUN</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" type="image/png" href="./assets/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="./assets/icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <div id="infos" aria-live="polite" role="status"></div>
+
+  <!-- S1 Konfigurationsvy -->
+  <main id="s1" class="view" aria-labelledby="s1Title">
+    <h1 id="s1Title" data-i18n="cfg.title"></h1>
+    <form id="cfgForm" novalidate autocomplete="off">
+      <div class="field">
+        <label for="f-name" data-i18n="cfg.name"></label>
+        <input id="f-name" type="text" maxlength="60">
+      </div>
+      <div class="field" data-key="reps">
+        <label for="f-reps" data-i18n="cfg.reps"></label>
+        <input id="f-reps" type="number" inputmode="numeric" step="1" aria-describedby="err-reps">
+        <div class="err" id="err-reps" role="alert"></div>
+      </div>
+      <div class="field" data-key="work">
+        <label for="f-work" data-i18n="cfg.work"></label>
+        <input id="f-work" type="number" inputmode="numeric" step="1" aria-describedby="err-work">
+        <div class="err" id="err-work" role="alert"></div>
+      </div>
+      <div class="field" data-key="repRest">
+        <label for="f-repRest" data-i18n="cfg.repRest"></label>
+        <input id="f-repRest" type="number" inputmode="numeric" step="1" aria-describedby="err-repRest">
+        <div class="err" id="err-repRest" role="alert"></div>
+      </div>
+      <div class="field" data-key="sets">
+        <label for="f-sets" data-i18n="cfg.sets"></label>
+        <input id="f-sets" type="number" inputmode="numeric" step="1" aria-describedby="err-sets">
+        <div class="err" id="err-sets" role="alert"></div>
+      </div>
+      <div class="field" data-key="setRest">
+        <label for="f-setRest" data-i18n="cfg.setRest"></label>
+        <input id="f-setRest" type="number" inputmode="numeric" step="1" aria-describedby="err-setRest">
+        <div class="err" id="err-setRest" role="alert"></div>
+      </div>
+      <div class="field" data-key="startDelay">
+        <label for="f-startDelay" data-i18n="cfg.startDelay"></label>
+        <input id="f-startDelay" type="number" inputmode="numeric" step="1" aria-describedby="err-startDelay">
+        <div class="err" id="err-startDelay" role="alert"></div>
+      </div>
+    </form>
+    <div class="err" id="err-total" role="alert"></div>
+    <dl class="totals">
+      <div><dt data-i18n="cfg.total"></dt><dd id="t-total">–</dd></div>
+      <div><dt data-i18n="cfg.totalWork"></dt><dd id="t-work">–</dd></div>
+      <div><dt data-i18n="cfg.totalRest"></dt><dd id="t-rest">–</dd></div>
+      <div><dt data-i18n="cfg.startRow"></dt><dd id="t-start">–</dd></div>
+    </dl>
+    <div class="actions">
+      <button id="btnStart" class="btn primary" type="button" data-i18n="cfg.start"></button>
+      <button id="btnChoose" class="btn" type="button" data-i18n="cfg.choose"></button>
+      <button id="btnSave" class="btn" type="button" data-i18n="cfg.save"></button>
+      <button id="btnSettings" class="btn" type="button" data-i18n="cfg.settings"></button>
+    </div>
+  </main>
+
+  <!-- S2 Passlista -->
+  <main id="s2" class="view" aria-labelledby="s2Title">
+    <h1 id="s2Title" data-i18n="list.title"></h1>
+    <h2 data-i18n="list.presets"></h2>
+    <ul id="presetList" class="plist"></ul>
+    <h2 data-i18n="list.custom"></h2>
+    <p id="customEmpty" class="muted" data-i18n="list.empty"></p>
+    <ul id="customList" class="plist"></ul>
+    <div class="actions"><button id="btnListBack" class="btn" type="button" data-i18n="list.back"></button></div>
+  </main>
+
+  <!-- S3 Träningsvy -->
+  <main id="s3" class="view" data-phase="start" aria-label="Träning">
+    <div id="runStatusRow">
+      <div id="phaseName" class="phase-name"><span id="phaseIcon" aria-hidden="true"></span><span id="phaseText"></span></div>
+      <div id="runStatus" class="run-status"></div>
+    </div>
+    <div id="countdownBox"><div id="countdown" aria-live="off">00:00</div></div>
+    <div id="runInfo">
+      <div id="setRepInfo"></div>
+      <div id="nextInfo"></div>
+      <div id="totalInfo"></div>
+      <div id="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progressBar"></div></div>
+    </div>
+    <div id="runButtons">
+      <button id="btnPause" class="btn-s3" type="button"></button>
+      <button id="btnSkip" class="btn-s3" type="button"></button>
+      <button id="btnMinus" class="btn-s3" type="button" data-i18n="run.minus"></button>
+      <button id="btnPlus" class="btn-s3" type="button" data-i18n="run.plus"></button>
+      <button id="btnMore" class="btn-s3" type="button" data-i18n="run.more"></button>
+    </div>
+    <div id="flash" aria-hidden="true"></div>
+  </main>
+
+  <!-- S4 Slutvy -->
+  <main id="s4" class="view" aria-labelledby="s4Title">
+    <h1 id="s4Title" data-i18n="end.title"></h1>
+    <p id="endStatus" class="run-status"></p>
+    <div class="actions">
+      <button id="btnEndRestart" class="btn primary" type="button" data-i18n="end.restart"></button>
+      <button id="btnEndBack" class="btn" type="button" data-i18n="end.back"></button>
+    </div>
+  </main>
+
+  <!-- S5 Inställningar -->
+  <main id="s5" class="view" aria-labelledby="s5Title">
+    <h1 id="s5Title" data-i18n="set.title"></h1>
+    <label class="row switch"><span data-i18n="set.sound"></span><input id="s-sound" type="checkbox"></label>
+    <label class="row switch"><span data-i18n="set.voice"></span><input id="s-voice" type="checkbox"></label>
+    <div class="row"><label for="s-voiceLang" data-i18n="set.voiceLang"></label>
+      <select id="s-voiceLang"><option value="sv" data-i18n="lang.sv"></option><option value="en" data-i18n="lang.en"></option></select></div>
+    <div class="row"><label for="s-volume" data-i18n="set.volume"></label>
+      <input id="s-volume" type="range" min="0" max="1" step="0.05"></div>
+    <label class="row switch"><span data-i18n="set.vibration"></span><input id="s-vibration" type="checkbox"></label>
+    <div id="vibNote" class="muted" hidden data-i18n="set.unsupported"></div>
+    <label class="row switch"><span data-i18n="set.animations"></span><input id="s-animations" type="checkbox"></label>
+    <div class="row"><label for="s-theme" data-i18n="set.theme"></label>
+      <select id="s-theme"><option value="system" data-i18n="set.themeSystem"></option><option value="light" data-i18n="set.themeLight"></option><option value="dark" data-i18n="set.themeDark"></option></select></div>
+    <div class="row"><label for="s-language" data-i18n="set.language"></label>
+      <select id="s-language"><option value="sv" data-i18n="lang.sv"></option><option value="en" data-i18n="lang.en"></option></select></div>
+    <div class="actions"><button id="btnSetBack" class="btn" type="button" data-i18n="set.back"></button></div>
+  </main>
+
+  <dialog id="modal" aria-labelledby="mTitle">
+    <h2 id="mTitle"></h2>
+    <p id="mText"></p>
+    <div id="mBody"></div>
+    <div id="mActions" class="actions"></div>
+  </dialog>
+
+  <div id="version" aria-label="Version"></div>
+  <script type="module" src="./js/app.js"></script>
+</body>
+</html>

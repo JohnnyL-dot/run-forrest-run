@@ -1,0 +1,19 @@
+{
+  "version": "v1.0.0",
+  "version_note": "1.0.0 – Första leveransen (TRN-TEK-003, TRN-TEK-013).",
+  "name": "RUN-FORREST-RUN",
+  "short_name": "RUN-FORREST-RUN",
+  "description": "Intervallträning: Tabata, HIIT, 4x4 och egna pass.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#166534",
+  "theme_color": "#166534",
+  "lang": "sv",
+  "icons": [
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
